@@ -3,9 +3,11 @@ import { Dashboard } from "@/components/dashboard"
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-[#12F3D5]/10 to-gray-900">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-gray-900 via-[#12F3D5]/10 to-gray-900">
       <Header />
-      <Dashboard />
-    </main>
+      <div className="flex-1 overflow-y-auto custom-scroll">
+        <Dashboard />
+      </div>
+    </div>
   )
 }

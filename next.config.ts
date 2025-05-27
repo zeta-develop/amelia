@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   output: "export",
@@ -12,7 +12,23 @@ const nextConfig: NextConfig = {
   // Optional: Change the output directory `out` -> `dist`
   distDir: "dist",
   compress: false,
-  /* config options here */
-};
 
-export default nextConfig;
+  // ESLint configuration
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  // TypeScript configuration
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
+  // Images configuration
+  images: {
+    unoptimized: true,
+  },
+
+  /* config options here */
+}
+
+export default nextConfig

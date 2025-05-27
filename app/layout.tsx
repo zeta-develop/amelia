@@ -9,6 +9,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Librería Amelia - Sistema de Inventario",
   description: "Sistema de gestión de inventario para Librería Amelia",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -17,10 +18,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning>
-      <body className={inter.className}>
+    <html lang="es" suppressHydrationWarning className="h-full">
+      <body className={`${inter.className} h-full`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          {children}
+          <div className="h-full overflow-hidden">{children}</div>
         </ThemeProvider>
       </body>
     </html>

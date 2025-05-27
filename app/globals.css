@@ -1,8 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "tailwindcss";
-
 
 :root {
   --background: 240 10% 3.9%;
@@ -49,45 +47,45 @@
   --ring: 174 91% 51%;
 }
 
-/* Eliminar las líneas problemáticas */
+/* Eliminar scroll del HTML y body */
+html,
 body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
-
-html, body {
   width: 100vw;
-  min-width: 100vw;
+  height: 100vh;
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   -webkit-app-region: no-drag;
-  overflow-x: hidden;
+  overflow: hidden; /* Eliminar todo el scroll del body */
+  margin: 0;
+  padding: 0;
 }
 
-html, body, #__next, #root, main {
+#__next,
+#root {
   width: 100vw;
-  min-width: 100vw;
+  height: 100vh;
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   overflow: hidden;
 }
-/* Custom scrollbar for webkit browsers */
-::-webkit-scrollbar {
+
+/* Custom scrollbar for webkit browsers - solo para componentes específicos */
+.custom-scroll::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
+.custom-scroll::-webkit-scrollbar-track {
   background: rgba(18, 243, 213, 0.05);
   border-radius: 10px;
 }
 
-::-webkit-scrollbar-thumb {
+.custom-scroll::-webkit-scrollbar-thumb {
   background: rgba(18, 243, 213, 0.3);
   border-radius: 10px;
 }
 
-::-webkit-scrollbar-thumb:hover {
+.custom-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(18, 243, 213, 0.5);
 }
 
@@ -96,6 +94,7 @@ html, body, #__next, #root, main {
   body {
     background: white;
     color: black;
+    overflow: visible !important;
   }
 
   .print\:hidden {
@@ -107,4 +106,16 @@ html, body, #__next, #root, main {
     max-width: 100%;
     margin: 0 auto;
   }
+}
+
+/* Clase para contenedores con scroll personalizado */
+.scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Clase para tablas con scroll */
+.table-container {
+  overflow: auto;
+  max-height: 70vh;
 }

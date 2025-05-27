@@ -1,7 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { History, Search, FileText, ChevronDown, ChevronUp, Calendar, Download } from "lucide-react"
+import {
+  History,
+  Search,
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+  Download,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useLocalStorage } from "@/hooks/use-local-storage"
@@ -11,13 +21,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { BarcodeGenerator } from "@/components/barcode-generator"
 
 export function SalesHistory() {
-  const [salesHistory] = useLocalStorage<Sale[]>("amelia-sales-history", [])
+  const [salesHistory, setSalesHistory] = useLocalStorage<Sale[]>("amelia-sales-history", [])
   const [searchTerm, setSearchTerm] = useState("")
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const [expandedSale, setExpandedSale] = useState<string | null>(null)
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
   const [isReceiptOpen, setIsReceiptOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false)
+  const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null)
 
   // Filter sales by search term and date range
   const filteredSales = salesHistory.filter((sale) => {
@@ -59,18 +72,60 @@ export function SalesHistory() {
     window.print()
   }
 
+  // Delete individual sale
+  const handleDeleteSale = (sale: Sale) => {
+    setSaleToDelete(sale)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteSale = () => {
+    if (saleToDelete) {
+      setSalesHistory(salesHistory.filter((sale) => sale.id !== saleToDelete.id))
+      setSaleToDelete(null)
+      setIsDeleteDialogOpen(false)
+
+      // Close expanded view if it was the deleted sale
+      if (expandedSale === saleToDelete.id) {
+        setExpandedSale(null)
+      }
+    }
+  }
+
+  // Clear all sales history
+  const handleClearAllHistory = () => {
+    setIsClearAllDialogOpen(true)
+  }
+
+  const confirmClearAllHistory = () => {
+    setSalesHistory([])
+    setIsClearAllDialogOpen(false)
+    setExpandedSale(null)
+  }
+
   // Calculate total sales
   const totalSales = sortedSales.reduce((total, sale) => total + sale.total, 0)
 
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-[#12F3D5]/30 bg-black/30 p-6 backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
           <h2 className="text-xl font-bold text-[#12F3D5] flex items-center">
             <History className="h-5 w-5 mr-2 text-[#12F3D5]" />
             Historial de Ventas
           </h2>
-          <div className="text-lg font-bold text-[#12F3D5]">Total: {formatCurrency(totalSales)}</div>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="text-lg font-bold text-[#12F3D5]">Total: {formatCurrency(totalSales)}</div>
+            {salesHistory.length > 0 && (
+              <Button
+                onClick={handleClearAllHistory}
+                variant="outline"
+                className="border-red-500/50 text-red-400 hover:text-red-300 hover:bg-red-950/30"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Limpiar Historial
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -107,8 +162,16 @@ export function SalesHistory() {
         {sortedSales.length === 0 ? (
           <div className="text-center py-12">
             <History className="h-12 w-12 mx-auto text-[#12F3D5]/50 mb-3" />
-            <p className="text-gray-300">No hay ventas registradas</p>
-            <p className="text-sm text-gray-400 mt-1">Las ventas completadas aparecerán aquí</p>
+            <p className="text-gray-300">
+              {salesHistory.length === 0
+                ? "No hay ventas registradas"
+                : "No se encontraron ventas con los filtros aplicados"}
+            </p>
+            <p className="text-sm text-gray-400 mt-1">
+              {salesHistory.length === 0
+                ? "Las ventas completadas aparecerán aquí"
+                : "Intenta cambiar los filtros de búsqueda"}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -130,6 +193,17 @@ export function SalesHistory() {
                     </div>
                   </div>
                   <div className="flex items-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-950/30 mr-2"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteSale(sale)
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -189,6 +263,83 @@ export function SalesHistory() {
           </div>
         )}
       </div>
+
+      {/* Delete Individual Sale Dialog */}
+      {isDeleteDialogOpen && saleToDelete && (
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent className="bg-gray-900 border-[#12F3D5]/30 max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-red-400 flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                Eliminar Venta
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-gray-300 mb-4">
+                ¿Estás seguro de que deseas eliminar la venta{" "}
+                <span className="font-medium text-[#12F3D5]">#{saleToDelete.receiptNumber}</span>?
+              </p>
+              <div className="rounded-lg bg-red-950/20 border border-red-500/30 p-3">
+                <p className="text-sm text-red-300">
+                  <strong>Advertencia:</strong> Esta acción no se puede deshacer. La venta será eliminada
+                  permanentemente del historial.
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={confirmDeleteSale} className="bg-red-600 hover:bg-red-700 text-white">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Clear All History Dialog */}
+      {isClearAllDialogOpen && (
+        <Dialog open={isClearAllDialogOpen} onOpenChange={setIsClearAllDialogOpen}>
+          <DialogContent className="bg-gray-900 border-[#12F3D5]/30 max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-red-400 flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                Limpiar Todo el Historial
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-gray-300 mb-4">
+                ¿Estás seguro de que deseas eliminar{" "}
+                <span className="font-medium text-[#12F3D5]">todas las {salesHistory.length} ventas</span> del
+                historial?
+              </p>
+              <div className="rounded-lg bg-red-950/20 border border-red-500/30 p-3 mb-4">
+                <p className="text-sm text-red-300">
+                  <strong>Advertencia:</strong> Esta acción no se puede deshacer. Todo el historial de ventas será
+                  eliminado permanentemente.
+                </p>
+              </div>
+              <div className="rounded-lg bg-[#12F3D5]/10 border border-[#12F3D5]/20 p-3">
+                <p className="text-sm text-gray-300">
+                  <strong>Total a eliminar:</strong>{" "}
+                  {formatCurrency(salesHistory.reduce((total, sale) => total + sale.total, 0))}
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsClearAllDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={confirmClearAllHistory} className="bg-red-600 hover:bg-red-700 text-white">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Limpiar Todo
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Receipt Dialog */}
       {isReceiptOpen && selectedSale && (
